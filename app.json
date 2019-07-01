@@ -1,0 +1,25 @@
+{
+  "id": "09b12b69-f203-4699-8e34-47e0748ff8db",
+  "name": "CustomAPI - Airplanes",
+  "publisher": "Empired",
+  "version": "1.0.0.0",
+  "brief": "",
+  "description": "",
+  "privacyStatement": "",
+  "EULA": "",
+  "help": "",
+  "url": "",
+  "logo": "",
+  "dependencies": [],
+  "screenshots": [],
+  "platform": "14.0.0.0",
+  "application": "14.0.0.0",
+  "idRanges": [
+    {
+      "from": 59000,
+      "to": 59009
+    }
+  ],
+  "showMyCode": true,
+  "runtime": "3.0"
+}
