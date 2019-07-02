@@ -3,9 +3,9 @@ page 59001 "Tractor Entity"
     PageType = API;
     SourceTable = Tractor;
     Caption = 'tractors';
-    APIGroup = 'tractors';
+    APIGroup = 'custom';
     APIPublisher = 'Empired';
-    APIVersion = 'beta';
+    APIVersion = 'v1.0';
     EntityName = 'tractor';
     EntitySetName = 'tractors';
     DelayedInsert = true;
