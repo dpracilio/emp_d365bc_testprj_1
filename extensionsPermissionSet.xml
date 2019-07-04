@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PermissionSets>
-  <PermissionSet RoleID="EMP_D365BC_TESTPRJ_1" RoleName="emp_d365bc_testprj_1">
+  <PermissionSet RoleID="API-C-TRACTORS" RoleName="API-C-TRACTORS">
     <Permission>
       <ObjectType>0</ObjectType>
       <ObjectID>59000</ObjectID>
