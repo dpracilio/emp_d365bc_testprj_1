@@ -1,0 +1,25 @@
+{
+  "id": "29945cdf-1fff-4bbe-bd4d-52c60fee08ba",
+  "name": "CustomAPP - Azure Function 01",
+  "publisher": "Empired",
+  "version": "1.0.0.0",
+  "brief": "",
+  "description": "",
+  "privacyStatement": "",
+  "EULA": "",
+  "help": "",
+  "url": "",
+  "logo": "",
+  "dependencies": [],
+  "screenshots": [],
+  "platform": "14.0.0.0",
+  "application": "14.0.0.0",
+  "idRanges": [
+    {
+      "from": 59010,
+      "to": 59019
+    }
+  ],
+  "showMyCode": true,
+  "runtime": "3.0"
+}
