@@ -187,9 +187,42 @@ codeunit 50100 "ICS Project Chart Mgmt"
                             end;
                         until JobG.Next() = 0;
 
-                    if (CompleteCountL) <> 0 or
+                    if (CompleteCountL <> 0) or (InprocessCountL <> 0) or (OpenCountL <> 0) or
+                    (PlanningCountL <> 0) or (CompleteCountL1 <> 0) or (InprocessCountL1 <> 0) or
+                    (OpenCountL1 <> 0) or (PlanningCountL1 <> 0) then begin
+                        AddColumn(CalendarL."Period Name");
+                        SetValue('In Process', xindex, Round(InprocessCountL + InprocessCountL1, 0.01, '='));
+                        SetValue('Open', xindex, Round(OpenCountL + OpenCountL1, 0.01, '='));
+                        SetValue('Completed', xindex, Round(CompleteCountL + CompleteCountL1, 0.01, '='));
+                        SetValue('Planning', xindex, Round(PlanningCountL + PlanningCountL1, 0.01, '='));
+                        SetValue('On Hold', xindex, Round(OnHoldCountL + OnHoldCountL1, 0.01, '='));
+                        xindex += 1;
+                    end;
+                until (i = LoopCount) or (CalendarL.Next() = 0);
         end;
+    end;
+
+    procedure ChartDrillDown(var Point: JsonObject; DeptCode: Code[20])
+    var
+        Job: Record Job;
+        CalendarL: Record Date;
+        JobList: Page "Job List";
+        FromDateL: Date;
+        FromDateL1: Date;
+        ToDateL: Date;
+        ToDateL1: Date;
+        Measures: Text;
+        XValueString: Text;
+        JsonTokenMeasures: JsonToken;
+        JsonTokenXValueString: JsonToken;
+    begin
+        if Point.Get('Measures', JsonTokenMeasures) then begin
+            Measures := Format(JsonTokenMeasures);
+            Measures := DelChr(Measures, '=', '["]');
         end;
+        if Point.Get('XValueString', JsonTokenXValueString) then begin
+            XValueString := Format(JsonTokenXValueString);
+            XValueString := DelChr(XValueString, '=', '"');
         end;
     end;
 
