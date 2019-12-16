@@ -1,4 +1,4 @@
-codeunit 50100 "ICS Project Chart Mgmt"
+codeunit 50110 "ICS Project Chart Mgmt"
 {
     trigger OnRun()
     begin
@@ -224,6 +224,58 @@ codeunit 50100 "ICS Project Chart Mgmt"
             XValueString := Format(JsonTokenXValueString);
             XValueString := DelChr(XValueString, '=', '"');
         end;
+
+        CalendarL.Reset();
+        CalendarL.SetRange("Period Type", CalendarL."Period Type"::Month);
+        if A <> '' then
+            CalendarL.SetFilter("Period Start", A)
+        else
+            if B <> '' then
+                CalendarL.SetFilter("Period Start", B)
+            else
+                CalendarL.SetFilter("Period Start", '%1..', CalcDate('<-CM>', CalendarG."Period Start"));
+        if CalendarL.FindSet() then
+            repeat
+                if CalendarL."Period Name" = XValueString then begin
+                    FromDateL := CalendarL."Period Start";
+                    ToDateL1 := CalcDate('<CM>', CalendarL."Period Start");
+                    if (CalendarL."Period No." = 1) or (CalendarL."Period No." = 2) or (CalendarL."Period No." = 3) then begin
+                        FromDateL := CalcDate('<-CM>', FromDateL);
+                        ToDateL1 := CalcDate('<-CM>', ToDateL1);
+                    end;
+                    if B <> '' then
+                        if DateFilterG2 - DateFilterG1 = 1 then begin
+                            FromDateL1 := CalcDate('<-CM+1Y', FromDateL1);
+                            ToDateL1 := CalcDate('<CM+1Y>', ToDateL1)
+                        end;
+                end;
+            until (CalendarL."Period Name" = XValueString) or (CalendarL.Next() = 0);
+
+        Job.Reset();
+        Job.FilterGroup(2);
+        if B <> '' then
+            Job.SetFilter("Starting Date", '%1..%2|%3..%4', FromDateL, ToDateL1, FromDateL1, ToDateL1)
+        else
+            Job.SetFilter("Starting Date", '%1..%2', FromDateL1, ToDateL1);
+
+        if DeptCode <> '' then
+            Job.SetRange("ICS Department", DeptCode);
+
+        case Measures of
+            'In Process':
+                Job.SetRange("ICS Project Status", Job."ICS Project Status"::"In Process");
+            'Open':
+                Job.SetRange("ICS Project Status", Job."ICS Project Status"::Open);
+            'Completed':
+                Job.SetRange("ICS Project Status", Job."ICS Project Status"::Completed);
+            'On Hold':
+                Job.SetRange("ICS Project Status", Job."ICS Project Status"::"On Hold");
+            'Planning':
+                Job.SetRange("ICS Project Status", Job."ICS Project Status"::Planning);
+        end;
+        JobList.SetTableView(Job);
+        Job.FilterGroup(0);
+        JobList.RunModal();
     end;
 
     var

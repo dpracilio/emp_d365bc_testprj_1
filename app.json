@@ -28,8 +28,8 @@
   "platform": "15.0.0.0",
   "idRanges": [
     {
-      "from": 50100,
-      "to": 50149
+      "from": 50110,
+      "to": 50114
     }
   ],
   "contextSensitiveHelpUrl": "https://JobProjectAnalysis.com/help/",

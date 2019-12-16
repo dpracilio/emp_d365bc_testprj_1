@@ -1,4 +1,4 @@
-page 50100 "ICS Project Analysis Chart"
+page 50110 "ICS Project Analysis Chart"
 {
     Caption = 'Project Analysis Chart';
     PageType = CardPart;
