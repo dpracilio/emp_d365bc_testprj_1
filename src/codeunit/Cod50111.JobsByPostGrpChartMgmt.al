@@ -1,10 +1,5 @@
 codeunit 50111 "Jobs By Post. Grp. Chart Mgmt"
 {
-    trigger OnRun()
-    begin
-
-    end;
-
     procedure UpdateChartData(var BusinessChartBuffer: Record "Business Chart Buffer")
     var
         ColumnIndex: Integer;
@@ -41,6 +36,8 @@ codeunit 50111 "Jobs By Post. Grp. Chart Mgmt"
         JobName: List of [Text];
         NoOfActiveJobs: List of [Integer];
         InvoicedAmount: List of [Decimal];
+        CostAmount: List of [Decimal];
+        RevenueAmount: List of [Decimal];
     begin
         if Point.Get('XValueString', JsonTokenXValueString) then begin
             XValueString := Format(JsonTokenXValueString);
@@ -52,12 +49,16 @@ codeunit 50111 "Jobs By Post. Grp. Chart Mgmt"
 
         with BusinessChartBuffer do begin
             Initialize();
-            AddMeasure('Invoiced Amount', 1, "Data Type"::Integer, "Chart Type"::Column);
+            AddMeasure('Cost', 1, "Data Type"::Decimal, "Chart Type"::StackedColumn);
+            AddMeasure('Invoiced', 2, "Data Type"::Decimal, "Chart Type"::StackedColumn);
+            AddMeasure('Revenue', 3, "Data Type"::Decimal, "Chart Type"::StackedColumn);
             SetXAxis('Job', "Data Type"::String);
-            CalcInvoicedAmountPerJob(JobPostGrp, JobName, InvoicedAmount, NoOfJobs);
+            CalcJobAmounts(JobPostGrp, JobName, InvoicedAmount, CostAmount, RevenueAmount, NoOfJobs);
             for ColumnIndex := 1 to NoOfJobs do begin
                 AddColumn(JobName.Get(ColumnIndex));
-                SetValue('Invoiced Amount', ColumnIndex - 1, InvoicedAmount.Get(ColumnIndex));
+                SetValue('Cost', ColumnIndex - 1, CostAmount.Get(ColumnIndex));
+                SetValue('Invoiced', ColumnIndex - 1, InvoicedAmount.Get(ColumnIndex));
+                SetValue('Revenue', ColumnIndex - 1, RevenueAmount.Get(ColumnIndex));
             end;
         end;
     end;
@@ -65,7 +66,9 @@ codeunit 50111 "Jobs By Post. Grp. Chart Mgmt"
     procedure ChartDrillDown(var Point: JsonObject)
     var
         Job: Record Job;
+        JobLedgerEntry: Record "Job Ledger Entry";
         JobList: Page "Job List";
+        JobLedgerEntries: Page "Job Ledger Entries";
         Measures: Text;
         XValueString: Text;
         JsonTokenMeasures: JsonToken;
@@ -73,58 +76,67 @@ codeunit 50111 "Jobs By Post. Grp. Chart Mgmt"
     begin
         if Point.Get('Measures', JsonTokenMeasures) then begin
             Measures := Format(JsonTokenMeasures);
-            Measures := DelChr(Measures, '=', '["]');
+            Measures := DelChr(Measures, '=', '["]');               // eg. Revenue
         end;
         if Point.Get('XValueString', JsonTokenXValueString) then begin
             XValueString := Format(JsonTokenXValueString);
-            XValueString := DelChr(XValueString, '=', '"');
+            XValueString := DelChr(XValueString, '=', '"');         // eg. Arctic Art
         end;
+
+        Clear(JobLedgerEntries);
 
         Job.Reset();
-        Job.FilterGroup(2);
+        Job.SetRange(Description, XValueString);
+        Job.FindFirst();
 
-        case Measures of
-            'In Process':
-                Job.SetRange("ICS Project Status", Job."ICS Project Status"::"In Process");
-            'Open':
-                Job.SetRange("ICS Project Status", Job."ICS Project Status"::Open);
-            'Completed':
-                Job.SetRange("ICS Project Status", Job."ICS Project Status"::Completed);
-            'On Hold':
-                Job.SetRange("ICS Project Status", Job."ICS Project Status"::"On Hold");
-            'Planning':
-                Job.SetRange("ICS Project Status", Job."ICS Project Status"::Planning);
-        end;
-        JobList.SetTableView(Job);
-        Job.FilterGroup(0);
-        JobList.RunModal();
+        JobLedgerEntry.Reset();
+        JobLedgerEntry.FilterGroup(2);
+        JobLedgerEntry.SetCurrentKey("Job No.", "Entry Type", "Posting Date");
+        JobLedgerEntry.SetRange("Job No.", Job."No.");
+        JobLedgerEntries.SetTableView(JobLedgerEntry);
+        JobLedgerEntry.FilterGroup(0);
+        JobLedgerEntries.RunModal();
     end;
 
-    local procedure CalcInvoicedAmountPerJob(var JobPostGrp: Record "Job Posting Group"; var JobName: List of [Text]; var InvoicedAmount: List of [Decimal]; var NoOfJobs: Integer)
+    local procedure CalcJobAmounts(var JobPostGrp: Record "Job Posting Group"; var JobName: List of [Text]; var InvoicedAmount: List of [Decimal]; var CostAmount: List of [Decimal]; var RevenueAmount: List of [Decimal]; var NoOfJobs: Integer)
     var
         Job: Record Job;
         JobLedgerEntry: Record "Job Ledger Entry";
-        CalcInvoicedAmount: Decimal;
+        InvoicedAmountLCY: Decimal;
+        CostAmountLCY: Decimal;
     begin
         Job.Reset();
         Job.SetRange("Job Posting Group", JobPostGrp.Code);
         Job.SetFilter(Status, '<>%1', Job.Status::Completed);
         Job.FindFirst();
         repeat
-            Clear(CalcInvoicedAmount);
+            Clear(InvoicedAmountLCY);
+            Clear(CostAmountLCY);
+
             JobLedgerEntry.Reset();
             JobLedgerEntry.SetCurrentKey("Job No.", "Entry Type", "Posting Date");
             JobLedgerEntry.SetRange("Job No.", Job."No.");
             JobLedgerEntry.SetRange("Entry Type", JobLedgerEntry."Entry Type"::Sale);
-            if JobLedgerEntry.FindFirst() then begin
+            if JobLedgerEntry.FindFirst() then
                 repeat
-                    CalcInvoicedAmount := CalcInvoicedAmount + JobLedgerEntry."Line Amount (LCY)";
+                    InvoicedAmountLCY := InvoicedAmountLCY + JobLedgerEntry."Line Amount (LCY)";
                 until JobLedgerEntry.Next() = 0;
 
-                NoOfJobs := NoOfJobs + 1;
-                JobName.Add(Job.Description);
-                InvoicedAmount.Add(-CalcInvoicedAmount);
-            end;
+            JobLedgerEntry.Reset();
+            JobLedgerEntry.SetCurrentKey("Job No.", "Entry Type", "Posting Date");
+            JobLedgerEntry.SetRange("Job No.", Job."No.");
+            JobLedgerEntry.SetRange("Entry Type", JobLedgerEntry."Entry Type"::Usage);
+            if JobLedgerEntry.FindFirst() then
+                repeat
+                    CostAmountLCY := CostAmountLCY + JobLedgerEntry."Line Amount (LCY)";
+                until JobLedgerEntry.Next() = 0;
+
+            NoOfJobs := NoOfJobs + 1;
+            JobName.Add(Job.Description);
+            InvoicedAmount.Add(-InvoicedAmountLCY);
+            CostAmount.Add(CostAmountLCY);
+            RevenueAmount.Add(-InvoicedAmountLCY - CostAmountLCY);
+
         until Job.Next() = 0;
     end;
 

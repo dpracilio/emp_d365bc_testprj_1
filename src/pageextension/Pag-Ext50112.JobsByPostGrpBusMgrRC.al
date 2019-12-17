@@ -4,7 +4,7 @@ pageextension 50112 "Jobs By Post. Grp. Bus-Mgr. RC" extends "Business Manager R
     {
         addafter(Control55)
         {
-            part(Jb; "Jobs By Posting Group Chart")
+            part(JobPerformance; "Job Performance Chart Wrapper")
             {
                 ApplicationArea = All;
             }

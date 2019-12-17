@@ -1,21 +1,24 @@
-page 50111 "Jobs By Posting Group Chart"
+page 50111 "Job Performance Chart Wrapper"
 {
-    Caption = 'Jobs By Posting Group';
+    Caption = 'Job Performance';
     PageType = CardPart;
     SourceTable = "Business Chart Buffer";
+    DeleteAllowed = false;
 
     layout
     {
         area(Content)
         {
-            // field(ICSStatusTxt; StatusText)
-            // {
-            //     ApplicationArea = All;
-            //     Caption = 'Status Text';
-            //     Editable = false;
-            //     ShowCaption = false;
-            //     ToolTip = 'Specifies the status of the chart';
-            // }
+            field(StatusTxt; 'Jobs by Posting Group')
+            {
+                ApplicationArea = All;
+                Caption = 'Status Text';
+                Editable = false;
+                ShowCaption = false;
+                Style = StrongAccent;
+                StyleExpr = TRUE;
+                ToolTip = 'Specifies the status of the chart';
+            }
             usercontrol(BusinessChart; "Microsoft.Dynamics.Nav.Client.BusinessChart")
             {
                 ApplicationArea = All;
@@ -51,7 +54,20 @@ page 50111 "Jobs By Posting Group Chart"
 
     actions
     {
+        area(Processing)
+        {
+            action(Refresh)
+            {
+                ApplicationArea = All;
+                Image = Refresh;
+                ToolTip = 'Refresh Chart';
 
+                trigger OnAction()
+                begin
+                    UpdateChart();
+                end;
+            }
+        }
     }
 
     trigger OnFindRecord(Which: Text): Boolean

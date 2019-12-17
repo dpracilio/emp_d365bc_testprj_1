@@ -8,7 +8,7 @@ pageextension 50111 "ICS Project Job List" extends "Job List"
             // {
             //     ApplicationArea = All;
             // }
-            part("Jobs By Posting Group Chart"; "Jobs By Posting Group Chart")
+            part(JobPerformance; "Job Performance Chart Wrapper")
             {
                 ApplicationArea = All;
             }
