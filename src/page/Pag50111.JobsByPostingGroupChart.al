@@ -76,11 +76,12 @@ page 50111 "Jobs By Posting Group Chart"
 
     local procedure UpdateChartActiveJobs(var Point: JsonObject)
     var
-        Point2: JsonObject;
+        JobPostingGroupName: Variant;
         JobPostingGroup: Record "Job Posting Group";
     begin
         if not IsChartDataReady then
             exit;
+
         JobsByPostGrpChartMgt.UpdateChartDataActiveJobs(Rec, Point);
         Update(CurrPage.BusinessChart);
     end;
