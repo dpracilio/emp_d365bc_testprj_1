@@ -9,7 +9,7 @@ page 50111 "Job Performance Chart Wrapper"
     {
         area(Content)
         {
-            field(StatusTxt; 'Jobs by Posting Group')
+            field(StatusText; StatusText)
             {
                 ApplicationArea = All;
                 Caption = 'Status Text';
@@ -86,25 +86,29 @@ page 50111 "Job Performance Chart Wrapper"
         if not IsChartDataReady then
             exit;
         JobsByPostGrpChartMgt.UpdateChartData(Rec);
+        StatusText := ChartLbl;
         Update(CurrPage.BusinessChart);
         ActiveJobsShown := false;
     end;
 
     local procedure UpdateChartActiveJobs(var Point: JsonObject)
     var
-        JobPostingGroupName: Variant;
         JobPostingGroup: Record "Job Posting Group";
+        JobPostingGroupName: Variant;
+        JobPostingGroupNameText: Text;
     begin
         if not IsChartDataReady then
             exit;
 
-        JobsByPostGrpChartMgt.UpdateChartDataActiveJobs(Rec, Point);
+        JobsByPostGrpChartMgt.UpdateChartDataActiveJobs(Rec, Point, JobPostingGroupNameText);
+        StatusText := StatusText + ' | ' + JobPostingGroupNameText;
         Update(CurrPage.BusinessChart);
     end;
 
     var
         JobsByPostGrpChartMgt: Codeunit "Jobs By Post. Grp. Chart Mgmt";
         StatusText: Text;
+        ChartLbl: Label 'Jobs by Posting Group';
         ActiveJobsShown: Boolean;
 
         [InDataSet]

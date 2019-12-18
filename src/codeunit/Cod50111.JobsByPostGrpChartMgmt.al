@@ -21,7 +21,7 @@ codeunit 50111 "Jobs By Post. Grp. Chart Mgmt"
         end;
     end;
 
-    procedure UpdateChartDataActiveJobs(var BusinessChartBuffer: Record "Business Chart Buffer"; var Point: JsonObject)
+    procedure UpdateChartDataActiveJobs(var BusinessChartBuffer: Record "Business Chart Buffer"; var Point: JsonObject; var JobPostGrpNameTxt: Text);
     var
         Measures: Text;
         XValueString: Text;
@@ -29,12 +29,11 @@ codeunit 50111 "Jobs By Post. Grp. Chart Mgmt"
         JsonTokenXValueString: JsonToken;
 
         ColumnIndex: Integer;
-        NoOfJobs: Integer;
+        NoOfActiveJobs: Integer;
         JobPostGrp: Record "Job Posting Group";
         JobPostGrpCode: List of [Code[20]];
         JobPostGrpName: List of [Text];
         JobName: List of [Text];
-        NoOfActiveJobs: List of [Integer];
         InvoicedAmount: List of [Decimal];
         CostAmount: List of [Decimal];
         RevenueAmount: List of [Decimal];
@@ -53,14 +52,16 @@ codeunit 50111 "Jobs By Post. Grp. Chart Mgmt"
             AddMeasure('Invoiced', 2, "Data Type"::Decimal, "Chart Type"::StackedColumn);
             AddMeasure('Revenue', 3, "Data Type"::Decimal, "Chart Type"::StackedColumn);
             SetXAxis('Job', "Data Type"::String);
-            CalcJobAmounts(JobPostGrp, JobName, InvoicedAmount, CostAmount, RevenueAmount, NoOfJobs);
-            for ColumnIndex := 1 to NoOfJobs do begin
+            CalcJobAmounts(JobPostGrp, JobName, InvoicedAmount, CostAmount, RevenueAmount, NoOfActiveJobs);
+            for ColumnIndex := 1 to NoOfActiveJobs do begin
                 AddColumn(JobName.Get(ColumnIndex));
                 SetValue('Cost', ColumnIndex - 1, CostAmount.Get(ColumnIndex));
                 SetValue('Invoiced', ColumnIndex - 1, InvoicedAmount.Get(ColumnIndex));
                 SetValue('Revenue', ColumnIndex - 1, RevenueAmount.Get(ColumnIndex));
             end;
         end;
+
+        JobPostGrpNameTxt := XValueString;
     end;
 
     procedure ChartDrillDown(var Point: JsonObject)
@@ -76,11 +77,11 @@ codeunit 50111 "Jobs By Post. Grp. Chart Mgmt"
     begin
         if Point.Get('Measures', JsonTokenMeasures) then begin
             Measures := Format(JsonTokenMeasures);
-            Measures := DelChr(Measures, '=', '["]');               // eg. Revenue
+            Measures := DelChr(Measures, '=', '["]');
         end;
         if Point.Get('XValueString', JsonTokenXValueString) then begin
             XValueString := Format(JsonTokenXValueString);
-            XValueString := DelChr(XValueString, '=', '"');         // eg. Arctic Art
+            XValueString := DelChr(XValueString, '=', '"');
         end;
 
         Clear(JobLedgerEntries);
@@ -98,7 +99,7 @@ codeunit 50111 "Jobs By Post. Grp. Chart Mgmt"
         JobLedgerEntries.RunModal();
     end;
 
-    local procedure CalcJobAmounts(var JobPostGrp: Record "Job Posting Group"; var JobName: List of [Text]; var InvoicedAmount: List of [Decimal]; var CostAmount: List of [Decimal]; var RevenueAmount: List of [Decimal]; var NoOfJobs: Integer)
+    local procedure CalcJobAmounts(var JobPostGrp: Record "Job Posting Group"; var JobName: List of [Text]; var InvoicedAmount: List of [Decimal]; var CostAmount: List of [Decimal]; var RevenueAmount: List of [Decimal]; var NoOfActiveJobs: Integer)
     var
         Job: Record Job;
         JobLedgerEntry: Record "Job Ledger Entry";
@@ -107,7 +108,7 @@ codeunit 50111 "Jobs By Post. Grp. Chart Mgmt"
     begin
         Job.Reset();
         Job.SetRange("Job Posting Group", JobPostGrp.Code);
-        Job.SetFilter(Status, '<>%1', Job.Status::Completed);
+        Job.SetRange(Status, Job.Status::Open);
         Job.FindFirst();
         repeat
             Clear(InvoicedAmountLCY);
@@ -131,12 +132,12 @@ codeunit 50111 "Jobs By Post. Grp. Chart Mgmt"
                     CostAmountLCY := CostAmountLCY + JobLedgerEntry."Line Amount (LCY)";
                 until JobLedgerEntry.Next() = 0;
 
-            NoOfJobs := NoOfJobs + 1;
+            NoOfActiveJobs := NoOfActiveJobs + 1;
+
             JobName.Add(Job.Description);
             InvoicedAmount.Add(-InvoicedAmountLCY);
             CostAmount.Add(CostAmountLCY);
             RevenueAmount.Add(-InvoicedAmountLCY - CostAmountLCY);
-
         until Job.Next() = 0;
     end;
 
@@ -150,7 +151,7 @@ codeunit 50111 "Jobs By Post. Grp. Chart Mgmt"
             repeat
                 Job.Reset();
                 Job.SetRange("Job Posting Group", JobPostGrp.Code);
-                Job.SetFilter(Status, '<>%1', Job.Status::Completed);
+                Job.SetRange(Status, Job.Status::Open);
 
                 if Job.Count <> 0 then begin
                     JobPostGrpName.Add(JobPostGrp.Description);

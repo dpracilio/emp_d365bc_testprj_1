@@ -8,10 +8,10 @@ pageextension 50111 "ICS Project Job List" extends "Job List"
             // {
             //     ApplicationArea = All;
             // }
-            part(JobPerformance; "Job Performance Chart Wrapper")
-            {
-                ApplicationArea = All;
-            }
+            // part(JobPerformance; "Job Performance Chart Wrapper")
+            // {
+            //     ApplicationArea = All;
+            // }
         }
     }
 
