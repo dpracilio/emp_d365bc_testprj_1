@@ -1,6 +1,6 @@
 {
-  "id": "c4f30979-8a00-47d1-8024-406577f6db31",
-  "name": "Job Project Analysis",
+  "id": "b4f30979-8a00-47d1-8024-406577f6da32",
+  "name": "Financial Project Analysis",
   "publisher": "David Pracilio",
   "version": "1.0.0.0",
   "brief": "",
@@ -22,14 +22,20 @@
       "publisher": "Microsoft",
       "name": "Base Application",
       "version": "15.0.0.0"
+    },
+    {
+      "appId": "c4f30979-8a00-47d1-8024-406577f6db31",
+      "name": "Job Project Analysis",
+      "version": "1.0.0.0",
+      "publisher": "David Pracilio"
     }
   ],
   "screenshots": [],
   "platform": "15.0.0.0",
   "idRanges": [
     {
-      "from": 50110,
-      "to": 50114
+      "from": 50115,
+      "to": 50119
     }
   ],
   "contextSensitiveHelpUrl": "https://JobProjectAnalysis.com/help/",
