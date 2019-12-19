@@ -3,14 +3,13 @@ page 50115 "Fin. Perform. Analysis Chart"
     Caption = 'Financial Performance';
     DeleteAllowed = false;
     PageType = CardPart;
-    ShowFilter = false;
     SourceTable = "Business Chart Buffer";
 
     layout
     {
         area(content)
         {
-            field(StatusText; 'General Ledger | View By Month')
+            field(StatusText; 'General Ledger')
             {
                 ApplicationArea = All;
                 Caption = 'Status Text';
@@ -21,31 +20,31 @@ page 50115 "Fin. Perform. Analysis Chart"
             }
             usercontrol(BusinessChart; "Microsoft.Dynamics.Nav.Client.BusinessChart")
             {
-                ApplicationArea = Basic, Suite;
+                ApplicationArea = All;
+
+                trigger DataPointClicked(point: JsonObject)
+                var
+                begin
+
+                end;
 
                 trigger AddInReady()
                 begin
-                    //CashFlowChartMgt.OnOpenPage(CashFlowChartSetup);
-                    //UpdateStatus;
+                    FinPerformChartMgt.OnOpenPage(FinPerformChartSetup);
+                    // CashFlowChartMgt.OnOpenPage(CashFlowChartSetup);
+                    // UpdateStatus;
                     IsChartAddInReady := true;
-                    if IsChartDataReady then
-                        UpdateChart();
+                    if IsChartAddInReady then
+                        UpdateChart(Period);
                 end;
 
                 trigger Refresh()
                 begin
                     // NeedsUpdate := true;
-                    If IsChartDataReady and IsChartDataReady then
-                        UpdateChart();
+                    If IsChartAddInReady and IsChartDataReady then
+                        UpdateChart(Period);
                 end;
             }
-            // field(NotSetupLbl; NotSetupLbl)
-            // {
-            //     ApplicationArea = Basic, Suite;
-            //     Editable = false;
-            //     ShowCaption = false;
-            //     Visible = NOT IsCashFlowSetUp;
-            // }
         }
     }
 
@@ -60,28 +59,29 @@ page 50115 "Fin. Perform. Analysis Chart"
                 {
                     Caption = 'Period Length';
                     Image = Period;
+
                     action(Day)
                     {
-                        ApplicationArea = Basic, Suite;
+                        ApplicationArea = All;
                         Caption = 'Day';
                         ToolTip = 'Each stack covers one day.';
 
                         trigger OnAction()
                         begin
-                            CashFlowChartSetup.SetPeriodLength(CashFlowChartSetup."Period Length"::Day);
-                            UpdateStatus;
+                            FinPerformChartSetup.SetPeriodLength(FinPerformChartSetup."Period Length"::Day);
+                            UpdateChart(Period);
                         end;
                     }
                     action(Week)
                     {
-                        ApplicationArea = Basic, Suite;
+                        ApplicationArea = All;
                         Caption = 'Week';
                         ToolTip = 'Show forecast entries summed for one week.';
 
                         trigger OnAction()
                         begin
-                            CashFlowChartSetup.SetPeriodLength(CashFlowChartSetup."Period Length"::Week);
-                            UpdateStatus;
+                            FinPerformChartSetup.SetPeriodLength(FinPerformChartSetup."Period Length"::Week);
+                            UpdateChart(Period);
                         end;
                     }
                     action(Month)
@@ -92,8 +92,8 @@ page 50115 "Fin. Perform. Analysis Chart"
 
                         trigger OnAction()
                         begin
-                            CashFlowChartSetup.SetPeriodLength(CashFlowChartSetup."Period Length"::Month);
-                            UpdateStatus;
+                            FinPerformChartSetup.SetPeriodLength(FinPerformChartSetup."Period Length"::Month);
+                            UpdateChart(Period);
                         end;
                     }
                     action(Quarter)
@@ -104,8 +104,8 @@ page 50115 "Fin. Perform. Analysis Chart"
 
                         trigger OnAction()
                         begin
-                            CashFlowChartSetup.SetPeriodLength(CashFlowChartSetup."Period Length"::Quarter);
-                            UpdateStatus;
+                            FinPerformChartSetup.SetPeriodLength(FinPerformChartSetup."Period Length"::Quarter);
+                            UpdateChart(Period);
                         end;
                     }
                     action(Year)
@@ -116,102 +116,83 @@ page 50115 "Fin. Perform. Analysis Chart"
 
                         trigger OnAction()
                         begin
-                            CashFlowChartSetup.SetPeriodLength(CashFlowChartSetup."Period Length"::Year);
-                            UpdateStatus;
+                            FinPerformChartSetup.SetPeriodLength(FinPerformChartSetup."Period Length"::Year);
+                            UpdateChart(Period);
                         end;
                     }
                 }
-            }
-            action(ChartInformation)
-            {
-                ApplicationArea = Basic, Suite;
-                Caption = 'Chart Information';
-                Image = AboutNav;
-                ToolTip = 'View a description of the chart.';
+                action(PreviousPeriod)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Previous Period';
+                    // Enabled = PreviousNextActionEnabled;
+                    Image = PreviousRecord;
+                    ToolTip = 'Show the information based on the previous period. If you set the View by field to Day, the date filter changes to the day before.';
 
-                trigger OnAction()
-                begin
-                    Message(ChartDescriptionMsg);
-                end;
+                    trigger OnAction()
+                    begin
+                        UpdateChart(Period::Previous);
+                        // BusinessChartBuffer.Update(CurrPage.BusinessChart);
+                    end;
+                }
+                action(NextPeriod)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Next Period';
+                    // Enabled = PreviousNextActionEnabled;
+                    Image = NextRecord;
+                    ToolTip = 'Show the information based on the next period. If you set the View by field to Day, the date filter changes to the day before.';
+
+                    trigger OnAction()
+                    begin
+                        // Period := Period::Next;
+                        //FinPerformChartMgt.UpdateChartData(Rec, Period::Next);
+                        // BusinessChartBuffer.Update(CurrPage.BusinessChart);
+                    end;
+                }
+                action(ChartInformation)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Chart Information';
+                    Image = AboutNav;
+                    ToolTip = 'View a description of the chart.';
+
+                    trigger OnAction()
+                    begin
+                        Message(ChartDescriptionMsg);
+                    end;
+                }
             }
         }
     }
-
     trigger OnFindRecord(Which: Text): Boolean
     begin
-        UpdateChart;
-        IsChartDataReady := true;
-        // if not IsCashFlowSetUp then
-        //     exit(true);
+        // Commenting out these lines fixed the refresh/updates chart twice when you change period, or select other actions.
+        // UpdateChart(Period);
+        // IsChartDataReady := true;
     end;
 
-    // trigger OnInit()
+    local procedure UpdateChart(Period: Option)
+    begin
+        if not IsChartAddInReady then
+            exit;
+        if FinPerformChartMgt.UpdateChartData(Rec, Period) then
+            Update(CurrPage.BusinessChart);
+    end;
+
+    // local procedure UpdateStatus()
     // begin
-    //     IsCashFlowSetUp := CashFlowForecastSetupExists;
+    //     NeedsUpdate := NeedsUpdate;
+    //     if not NeedsUpdate then
+    //         exit;
+
+    //     //OldCashFlowChartSetup := CashFlowChartSetup;
+    //     //StatusText := CashFlowChartSetup.GetCurrentSelectionText;
     // end;
-
-    local procedure UpdateChart()
-    begin
-        // if not NeedsUpdate then
-        //     exit;
-        // if not IsChartAddInReady then
-        //     exit;
-        // if not IsCashFlowSetUp then
-        //     exit;
-
-        // if CashFlowChartMgt.UpdateData(Rec) then
-        FinPerformChartMgt.UpdateChartData(Rec);
-        Update(CurrPage.BusinessChart);
-        //UpdateStatus;
-
-        //NeedsUpdate := false;
-    end;
-
-    local procedure UpdateStatus()
-    begin
-        NeedsUpdate := NeedsUpdate or IsSetupChanged;
-        if not NeedsUpdate then
-            exit;
-
-        //OldCashFlowChartSetup := CashFlowChartSetup;
-        //StatusText := CashFlowChartSetup.GetCurrentSelectionText;
-    end;
-
-    local procedure IsSetupChanged(): Boolean
-    begin
-        exit(
-          (OldCashFlowChartSetup."Period Length" <> CashFlowChartSetup."Period Length") or
-          (OldCashFlowChartSetup.Show <> CashFlowChartSetup.Show) or
-          (OldCashFlowChartSetup."Start Date" <> CashFlowChartSetup."Start Date") or
-          (OldCashFlowChartSetup."Group By" <> CashFlowChartSetup."Group By"));
-    end;
-
-    local procedure CashFlowForecastSetupExists(): Boolean
-    var
-        CashFlowSetup: Record "Cash Flow Setup";
-    begin
-        if not CashFlowSetup.Get then
-            exit(false);
-        exit(CashFlowSetup."CF No. on Chart in Role Center" <> '');
-    end;
-
-    local procedure RecalculateAndUpdateChart()
-    var
-        CashFlowSetup: Record "Cash Flow Setup";
-        CashFlowManagement: Codeunit "Cash Flow Management";
-    begin
-        if not Confirm(ConfirmRecalculationQst) then
-            exit;
-        CashFlowSetup.Get;
-        CashFlowManagement.UpdateCashFlowForecast(CashFlowSetup."Azure AI Enabled");
-        CurrPage.Update(false);
-
-        NeedsUpdate := true;
-        UpdateStatus;
-    end;
 
     var
         FinPerformChartMgt: Codeunit "Fin. Perform. Chart Mgmt";
+        FinPerformChartSetup: Record "Fin. Perform. Chart Setup";
         CashFlowChartSetup: Record "Cash Flow Chart Setup";
         OldCashFlowChartSetup: Record "Cash Flow Chart Setup";
         CashFlowChartMgt: Codeunit "Cash Flow Chart Mgt.";
@@ -220,9 +201,11 @@ page 50115 "Fin. Perform. Analysis Chart"
         NotSetupLbl: Label 'Cash Flow Forecast is not set up. An Assisted Setup is available for easy set up.';
         ChartDescriptionMsg: Label 'Shows the expected movement of money into or out of your company.';
         ConfirmRecalculationQst: Label 'You are about to update the information in the chart. This can take some time. Do you want to continue?';
+        Period: Option " ",Next,Previous;
         [InDataSet]
         IsChartDataReady: Boolean;
         IsChartAddInReady: Boolean;
         IsCashFlowSetUp: Boolean;
+
 }
 
