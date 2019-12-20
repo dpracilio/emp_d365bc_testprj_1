@@ -24,14 +24,14 @@ page 50115 "Fin. Perform. Analysis Chart"
 
                 trigger DataPointClicked(point: JsonObject)
                 var
-                begin
 
+                begin
+                    FinPerformChartMgt.ChartDrillDown(point);
                 end;
 
                 trigger AddInReady()
                 begin
                     FinPerformChartMgt.OnOpenPage(FinPerformChartSetup);
-                    // CashFlowChartMgt.OnOpenPage(CashFlowChartSetup);
                     // UpdateStatus;
                     IsChartAddInReady := true;
                     if IsChartAddInReady then
@@ -52,117 +52,119 @@ page 50115 "Fin. Perform. Analysis Chart"
     {
         area(processing)
         {
-            group("Chart Options")
+            group(PeriodLength)
             {
-                Caption = 'Chart Options';
-                group(PeriodLength)
-                {
-                    Caption = 'Period Length';
-                    Image = Period;
+                Caption = 'Period Length';
+                Image = Period;
 
-                    action(Day)
-                    {
-                        ApplicationArea = All;
-                        Caption = 'Day';
-                        ToolTip = 'Each stack covers one day.';
-
-                        trigger OnAction()
-                        begin
-                            FinPerformChartSetup.SetPeriodLength(FinPerformChartSetup."Period Length"::Day);
-                            UpdateChart(Period);
-                        end;
-                    }
-                    action(Week)
-                    {
-                        ApplicationArea = All;
-                        Caption = 'Week';
-                        ToolTip = 'Show entries summed for one week.';
-
-                        trigger OnAction()
-                        begin
-                            FinPerformChartSetup.SetPeriodLength(FinPerformChartSetup."Period Length"::Week);
-                            UpdateChart(Period);
-                        end;
-                    }
-                    action(Month)
-                    {
-                        ApplicationArea = All;
-                        Caption = 'Month';
-                        ToolTip = 'Each stack except for the last stack covers one month.';
-
-                        trigger OnAction()
-                        begin
-                            FinPerformChartSetup.SetPeriodLength(FinPerformChartSetup."Period Length"::Month);
-                            UpdateChart(Period);
-                        end;
-                    }
-                    action(Quarter)
-                    {
-                        ApplicationArea = All;
-                        Caption = 'Quarter';
-                        ToolTip = 'Each stack except for the last stack covers one quarter.';
-
-                        trigger OnAction()
-                        begin
-                            FinPerformChartSetup.SetPeriodLength(FinPerformChartSetup."Period Length"::Quarter);
-                            UpdateChart(Period);
-                        end;
-                    }
-                    action(Year)
-                    {
-                        ApplicationArea = All;
-                        Caption = 'Year';
-                        ToolTip = 'Show amounts summed for one year.';
-
-                        trigger OnAction()
-                        begin
-                            FinPerformChartSetup.SetPeriodLength(FinPerformChartSetup."Period Length"::Year);
-                            UpdateChart(Period);
-                        end;
-                    }
-                }
-                action(PreviousPeriod)
+                action(Day)
                 {
                     ApplicationArea = All;
-                    Caption = 'Previous Period';
-                    // Enabled = PreviousNextActionEnabled;
-                    Image = PreviousRecord;
-                    ToolTip = 'Show the information based on the previous period. If you set the View by field to Day, the date filter changes to the day before.';
+                    Caption = 'Day';
+                    Image = DueDate;
+                    ToolTip = 'Each stack covers one day.';
 
                     trigger OnAction()
                     begin
-                        UpdateChart(Period::Previous);
-                        // BusinessChartBuffer.Update(CurrPage.BusinessChart);
+                        FinPerformChartSetup.SetPeriodLength(FinPerformChartSetup."Period Length"::Day);
+                        UpdateChart(Period);
                     end;
                 }
-                action(NextPeriod)
+                action(Week)
                 {
                     ApplicationArea = All;
-                    Caption = 'Next Period';
-                    // Enabled = PreviousNextActionEnabled;
-                    Image = NextRecord;
-                    ToolTip = 'Show the information based on the next period. If you set the View by field to Day, the date filter changes to the day before.';
+                    Caption = 'Week';
+                    Image = DateRange;
+                    ToolTip = 'Show entries summed for one week.';
 
                     trigger OnAction()
                     begin
-                        UpdateChart(Period::Next);
-                        // BusinessChartBuffer.Update(CurrPage.BusinessChart);
+                        FinPerformChartSetup.SetPeriodLength(FinPerformChartSetup."Period Length"::Week);
+                        UpdateChart(Period);
                     end;
                 }
-                action(ChartInformation)
+                action(Month)
                 {
                     ApplicationArea = All;
-                    Caption = 'Chart Information';
-                    Image = AboutNav;
-                    ToolTip = 'View a description of the chart.';
+                    Caption = 'Month';
+                    Image = DateRange;
+                    ToolTip = 'Each stack stack covers one month.';
 
                     trigger OnAction()
                     begin
-                        Message(ChartDescriptionMsg);
+                        FinPerformChartSetup.SetPeriodLength(FinPerformChartSetup."Period Length"::Month);
+                        UpdateChart(Period);
+                    end;
+                }
+                action(Quarter)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Quarter';
+                    Image = DateRange;
+                    ToolTip = 'Show amounts for each quarter.';
+
+                    trigger OnAction()
+                    begin
+                        FinPerformChartSetup.SetPeriodLength(FinPerformChartSetup."Period Length"::Quarter);
+                        UpdateChart(Period);
+                    end;
+                }
+                action(Year)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Year';
+                    Image = DateRange;
+                    ToolTip = 'Show amounts summed for one year.';
+
+                    trigger OnAction()
+                    begin
+                        FinPerformChartSetup.SetPeriodLength(FinPerformChartSetup."Period Length"::Year);
+                        UpdateChart(Period);
                     end;
                 }
             }
+            action(PreviousPeriod)
+            {
+                ApplicationArea = All;
+                Caption = 'Previous Period';
+                // Enabled = PreviousNextActionEnabled;
+                Image = PreviousRecord;
+                ToolTip = 'Show the information based on the previous period. If you set the View by field to Day, the date filter changes to the day before.';
+
+                trigger OnAction()
+                begin
+                    UpdateChart(Period::Previous);
+                    // BusinessChartBuffer.Update(CurrPage.BusinessChart);
+                end;
+            }
+            action(NextPeriod)
+            {
+                ApplicationArea = All;
+                Caption = 'Next Period';
+                // Enabled = PreviousNextActionEnabled;
+                Image = NextRecord;
+                ToolTip = 'Show the information based on the next period.';
+
+                trigger OnAction()
+                begin
+                    UpdateChart(Period::Next);
+                    // BusinessChartBuffer.Update(CurrPage.BusinessChart);
+                end;
+            }
+            action(ChartInformation)
+            {
+                ApplicationArea = All;
+                Caption = 'Chart Information';
+                Image = AboutNav;
+                ToolTip = 'View a description of the chart.';
+
+                trigger OnAction()
+                begin
+                    Message(ChartDescriptionMsg);
+                end;
+            }
         }
+        //}
     }
     trigger OnFindRecord(Which: Text): Boolean
     begin
@@ -175,8 +177,9 @@ page 50115 "Fin. Perform. Analysis Chart"
     begin
         if not IsChartAddInReady then
             exit;
-        if FinPerformChartMgt.UpdateChartData(Rec, Period) then
+        if FinPerformChartMgt.UpdateChartData(Rec, Period) then begin
             Update(CurrPage.BusinessChart);
+        end;
     end;
 
     // local procedure UpdateStatus()

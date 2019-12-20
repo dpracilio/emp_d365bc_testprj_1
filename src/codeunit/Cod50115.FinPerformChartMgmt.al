@@ -69,37 +69,44 @@ codeunit 50115 "Fin. Perform. Chart Mgmt"
 
     procedure ChartDrillDown(var Point: JsonObject)
     var
-        Job: Record Job;
-        JobLedgerEntry: Record "Job Ledger Entry";
-        JobList: Page "Job List";
-        JobLedgerEntries: Page "Job Ledger Entries";
+        GLEntry: Record "G/L Entry";
+        GeneralLedgerEntries: Page "Job Ledger Entries";
         Measures: Text;
         XValueString: Text;
         JsonTokenMeasures: JsonToken;
         JsonTokenXValueString: JsonToken;
+        DrillDownXIndex: Integer;
+        PeriodStartDate: array[6] of Date;
+        PeriodFormMgmt: Codeunit PeriodFormManagement;
+        DateText: Text;
+        Date2: Date;
+        BusChartBuf: Record "Business Chart Buffer";
     begin
         if Point.Get('Measures', JsonTokenMeasures) then begin
             Measures := Format(JsonTokenMeasures);
-            Measures := DelChr(Measures, '=', '["]');
+            Measures := DelChr(Measures, '=', '["]');       // Amount type eg. Income
         end;
         if Point.Get('XValueString', JsonTokenXValueString) then begin
             XValueString := Format(JsonTokenXValueString);
-            XValueString := DelChr(XValueString, '=', '"');
+            XValueString := DelChr(XValueString, '=', '"'); // Period eg. Jun 2020
         end;
 
-        Clear(JobLedgerEntries);
+        Message(Format(Measures));
+        Message(Format(XValueString));
 
-        Job.Reset();
-        Job.SetRange(Description, XValueString);
-        Job.FindFirst();
+        // Clear(GeneralLedgerEntries);
 
-        JobLedgerEntry.Reset();
-        JobLedgerEntry.FilterGroup(2);
-        JobLedgerEntry.SetCurrentKey("Job No.", "Entry Type", "Posting Date");
-        JobLedgerEntry.SetRange("Job No.", Job."No.");
-        JobLedgerEntries.SetTableView(JobLedgerEntry);
-        JobLedgerEntry.FilterGroup(0);
-        JobLedgerEntries.RunModal();
+        // GLEntry.Reset();
+        // Job.SetRange(Description, XValueString);
+        // Job.FindFirst();
+
+        // JobLedgerEntry.Reset();
+        // JobLedgerEntry.FilterGroup(2);
+        // JobLedgerEntry.SetCurrentKey("Job No.", "Entry Type", "Posting Date");
+        // JobLedgerEntry.SetRange("Job No.", Job."No.");
+        // JobLedgerEntries.SetTableView(JobLedgerEntry);
+        // JobLedgerEntry.FilterGroup(0);
+        // JobLedgerEntries.RunModal();
     end;
 
     local procedure InitParameters(BusChartBuf: Record "Business Chart Buffer"; var PeriodLength: Text[1]; var NoOfPeriods: Integer)
@@ -155,41 +162,40 @@ codeunit 50115 "Fin. Perform. Chart Mgmt"
             PeriodDate := CalcDate(StrSubstNo('<-1%1>', BusChartBuf.GetPeriodLength()), BusChartBuf."Period Filter Start Date")
         else begin
             BusChartBuf.RecalculatePeriodFilter(StartDate, EndDate, Period);
-            RecalculatePeriodFilter(BusChartBuf, StartDate, EndDate, Period);
+            // RecalculatePeriodFilter(BusChartBuf, StartDate, EndDate, Period);
             // PeriodDate := CalcDate(StrSubstNo('<-%1%2>', MaxPeriodNo, BusChartBuf.GetPeriodLength()), EndDate);
             PeriodDate := CalcDate(StrSubstNo('<-%1%2>', MaxPeriodNo - (MaxPeriodNo div 2), BusChartBuf.GetPeriodLength), EndDate);
         end;
-
         BusChartBuf.AddPeriods(GetCorrectedDate(BusChartBuf, PeriodDate, 1), GetCorrectedDate(BusChartBuf, PeriodDate, MaxPeriodNo));
     end;
 
-    procedure RecalculatePeriodFilter(var BusChartBuf: Record "Business Chart Buffer"; var StartDate: Date; var EndDate: Date; MovePeriod: Option " ",Next,Previous)
-    var
-        Calendar: Record Date;
-        PeriodFormMgt: Codeunit PeriodFormManagement;
-        SearchText: Text[3];
-    begin
-        if StartDate <> 0D then begin
-            Calendar.SetFilter("Period Start", '%1..%2', StartDate, EndDate);
-            if not PeriodFormMgt.FindDate('+', Calendar, BusChartBuf."Period Length") then
-                PeriodFormMgt.FindDate('+', Calendar, Calendar."Period Type"::Date);
-            Calendar.SetRange("Period Start");
-        end;
+    // procedure RecalculatePeriodFilter(var BusChartBuf: Record "Business Chart Buffer"; var StartDate: Date; var EndDate: Date; MovePeriod: Option " ",Next,Previous)
+    // var
+    //     Calendar: Record Date;
+    //     PeriodFormMgt: Codeunit PeriodFormManagement;
+    //     SearchText: Text[3];
+    // begin
+    //     if StartDate <> 0D then begin
+    //         Calendar.SetFilter("Period Start", '%1..%2', StartDate, EndDate);
+    //         if not PeriodFormMgt.FindDate('+', Calendar, BusChartBuf."Period Length") then
+    //             PeriodFormMgt.FindDate('+', Calendar, Calendar."Period Type"::Date);
+    //         Calendar.SetRange("Period Start");
+    //     end;
 
-        case MovePeriod of
-            MovePeriod::Next:
-                SearchText := '>=';
-            MovePeriod::Previous:
-                SearchText := '<=';
-            else
-                SearchText := '';
-        end;
+    //     case MovePeriod of
+    //         MovePeriod::Next:
+    //             SearchText := '>=';
+    //         MovePeriod::Previous:
+    //             SearchText := '<=';
+    //         else
+    //             SearchText := '';
+    //     end;
 
-        PeriodFormMgt.FindDate(SearchText, Calendar, BusChartBuf."Period Length");
+    //     PeriodFormMgt.FindDate(SearchText, Calendar, BusChartBuf."Period Length");
 
-        StartDate := Calendar."Period Start";
-        EndDate := Calendar."Period End";
-    end;
+    //     StartDate := Calendar."Period Start";
+    //     EndDate := Calendar."Period End";
+    // end;
 
     local procedure GetCorrectedDate(BusChartBuf: Record "Business Chart Buffer"; InputDate: Date; PeriodNo: Integer) OutputDate: Date
     begin
@@ -209,5 +215,34 @@ codeunit 50115 "Fin. Perform. Chart Mgmt"
             end;
     end;
 
+    local procedure CalcPeriodStartDates(var PeriodStartDate: array[6] of Date; PeriodLength: Integer)
     var
+        I: Integer;
+    begin
+        PeriodStartDate[6] := WorkDate;
+        PeriodStartDate[1] := 0D;
+        for I := 2 to 5 do
+            PeriodStartDate[I] := CalcDate('<-' + Format((6 - I) * PeriodLength) + 'D>', PeriodStartDate[6]);
+    end;
+
+    procedure GetPeriodLengthInDays(BusChartBuf: Record "Business Chart Buffer"): Integer
+    begin
+        with BusChartBuf do
+            case "Period Length" of
+                "Period Length"::Day:
+                    exit(1);
+                "Period Length"::Week:
+                    exit(7);
+                "Period Length"::Month:
+                    exit(30);
+                "Period Length"::Quarter:
+                    exit(90);
+                "Period Length"::Year:
+                    exit(365);
+            end;
+    end;
+
+    var
+        Days: Decimal;
+        DateTime: DateTime;
 }

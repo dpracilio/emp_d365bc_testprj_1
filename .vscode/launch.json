@@ -6,7 +6,7 @@
             "request": "launch",
             "name": "Microsoft cloud sandbox",
             "breakOnError": true,
-            "launchBrowser": false,
+            "launchBrowser": true,
             "enableLongRunningSqlStatements": true,
             "enableSqlInformationDebugger": true
         }
