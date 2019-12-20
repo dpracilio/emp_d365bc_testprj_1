@@ -38,8 +38,6 @@ codeunit 50115 "Fin. Perform. Chart Mgmt"
             InitParameters(BusinessChartBuffer, PeriodLength, NoOfPeriods);
             CalcAndInsertPeriodAxis(BusinessChartBuffer, Period, NoOfPeriods, FromDate, ToDate);
 
-            Message(Format(Period));
-
             AddMeasure('Amount', '', "Data Type"::Decimal, "Chart Type"::Column);
             AddMeasure('Income', '', "Data Type"::Decimal, "Chart Type"::Column);
             AddMeasure('Expenses', '', "Data Type"::Decimal, "Chart Type"::Column);
@@ -157,8 +155,9 @@ codeunit 50115 "Fin. Perform. Chart Mgmt"
             PeriodDate := CalcDate(StrSubstNo('<-1%1>', BusChartBuf.GetPeriodLength()), BusChartBuf."Period Filter Start Date")
         else begin
             BusChartBuf.RecalculatePeriodFilter(StartDate, EndDate, Period);
-            // RecalculatePeriodFilter(BusChartBuf, StartDate, EndDate, Period);
-            PeriodDate := CalcDate(StrSubstNo('<-%1%2>', MaxPeriodNo, BusChartBuf.GetPeriodLength()), EndDate);
+            RecalculatePeriodFilter(BusChartBuf, StartDate, EndDate, Period);
+            // PeriodDate := CalcDate(StrSubstNo('<-%1%2>', MaxPeriodNo, BusChartBuf.GetPeriodLength()), EndDate);
+            PeriodDate := CalcDate(StrSubstNo('<-%1%2>', MaxPeriodNo - (MaxPeriodNo div 2), BusChartBuf.GetPeriodLength), EndDate);
         end;
 
         BusChartBuf.AddPeriods(GetCorrectedDate(BusChartBuf, PeriodDate, 1), GetCorrectedDate(BusChartBuf, PeriodDate, MaxPeriodNo));

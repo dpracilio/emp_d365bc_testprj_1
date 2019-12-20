@@ -76,7 +76,7 @@ page 50115 "Fin. Perform. Analysis Chart"
                     {
                         ApplicationArea = All;
                         Caption = 'Week';
-                        ToolTip = 'Show forecast entries summed for one week.';
+                        ToolTip = 'Show entries summed for one week.';
 
                         trigger OnAction()
                         begin
@@ -86,9 +86,9 @@ page 50115 "Fin. Perform. Analysis Chart"
                     }
                     action(Month)
                     {
-                        ApplicationArea = Basic, Suite;
+                        ApplicationArea = All;
                         Caption = 'Month';
-                        ToolTip = 'Each stack except for the last stack covers one month. The last stack contains data from the start of the month until the date that is defined by the Show option.';
+                        ToolTip = 'Each stack except for the last stack covers one month.';
 
                         trigger OnAction()
                         begin
@@ -98,9 +98,9 @@ page 50115 "Fin. Perform. Analysis Chart"
                     }
                     action(Quarter)
                     {
-                        ApplicationArea = Basic, Suite;
+                        ApplicationArea = All;
                         Caption = 'Quarter';
-                        ToolTip = 'Each stack except for the last stack covers one quarter. The last stack contains data from the start of the quarter until the date that is defined by the Show option.';
+                        ToolTip = 'Each stack except for the last stack covers one quarter.';
 
                         trigger OnAction()
                         begin
@@ -110,9 +110,9 @@ page 50115 "Fin. Perform. Analysis Chart"
                     }
                     action(Year)
                     {
-                        ApplicationArea = Basic, Suite;
+                        ApplicationArea = All;
                         Caption = 'Year';
-                        ToolTip = 'Show pending payments summed for one year. Overdue payments are shown as amounts within specific years from the due date going back five years from today''s date.';
+                        ToolTip = 'Show amounts summed for one year.';
 
                         trigger OnAction()
                         begin
@@ -145,8 +145,7 @@ page 50115 "Fin. Perform. Analysis Chart"
 
                     trigger OnAction()
                     begin
-                        // Period := Period::Next;
-                        //FinPerformChartMgt.UpdateChartData(Rec, Period::Next);
+                        UpdateChart(Period::Next);
                         // BusinessChartBuffer.Update(CurrPage.BusinessChart);
                     end;
                 }
@@ -193,14 +192,9 @@ page 50115 "Fin. Perform. Analysis Chart"
     var
         FinPerformChartMgt: Codeunit "Fin. Perform. Chart Mgmt";
         FinPerformChartSetup: Record "Fin. Perform. Chart Setup";
-        CashFlowChartSetup: Record "Cash Flow Chart Setup";
-        OldCashFlowChartSetup: Record "Cash Flow Chart Setup";
-        CashFlowChartMgt: Codeunit "Cash Flow Chart Mgt.";
         StatusText: Text;
         NeedsUpdate: Boolean;
-        NotSetupLbl: Label 'Cash Flow Forecast is not set up. An Assisted Setup is available for easy set up.';
-        ChartDescriptionMsg: Label 'Shows the expected movement of money into or out of your company.';
-        ConfirmRecalculationQst: Label 'You are about to update the information in the chart. This can take some time. Do you want to continue?';
+        ChartDescriptionMsg: Label 'Shows the amounts in the general ledger.';
         Period: Option " ",Next,Previous;
         [InDataSet]
         IsChartDataReady: Boolean;
